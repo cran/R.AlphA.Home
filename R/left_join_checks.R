@@ -63,14 +63,14 @@ left_join_checks <- function(
 ){
 
 	{
-		fnTmr <- timer(step = "Start --")
+		fnTmr <- Rtimer$new()
 		# preparation pour merge
-		fnTmr <- timer(fnTmr, step = "indexes - inX, inY")
+		fnTmr$add("indexes - inX, inY")
 		xMerge <- x %>% rowid_to_column(var = "tmp_xID") %>% mutate(tmp_inX = 1)
 		yMerge <- y %>% rowid_to_column(var = "tmp_yID") %>% mutate(tmp_inY = 1)
 	} # preparation
 	{
-		fnTmr <- timer(fnTmr, step = "join itself")
+		fnTmr$add("join itself")
 		joinXY <- left_join(
 			xMerge
 			, yMerge
@@ -78,15 +78,15 @@ left_join_checks <- function(
 		) %>% replace_na(list(tmp_inX = 0, tmp_inY = 0))
 	} # merge
 	{
-		fnTmr <- timer(fnTmr, step = "chk_preserved_x")
+		fnTmr$add("chk_preserved_x")
 		chk_preserved_x <- all.equal(joinXY$tmp_xID, xMerge$tmp_xID) %>% isTRUE
-		fnTmr <- timer(fnTmr, step = "chk_dups_x")
+		fnTmr$add("chk_dups_x")
 		chk_dups_x <- duplicated(joinXY$tmp_xID) %>% sum
-		fnTmr <- timer(fnTmr, step = "chk_preserved_y")
+		fnTmr$add("chk_preserved_y")
 		chk_preserved_y <- all.equal(joinXY$tmp_yID, yMerge$tmp_yID) %>% isTRUE
-		fnTmr <- timer(fnTmr, step = "chk_dups_y")
+		fnTmr$add("chk_dups_y")
 		chk_dups_y <- duplicated(joinXY$tmp_yID) %>% sum
-		fnTmr <- timer(fnTmr, step = "joinMatch_prep")
+		fnTmr$add("joinMatch_prep")
 		joinMatch_prep <- joinXY %>% count(tmp_inX, tmp_inY)
 		joinMatch <- expand.grid(tmp_inX = 0:1, tmp_inY = 0:1) %>%
 			left_join(joinMatch_prep) %>%
@@ -94,7 +94,7 @@ left_join_checks <- function(
 			replace_na(list(n=0))
 		chk_yNotFound <- joinMatch %>% filter(!tmp_inY) %>% pull(n) %>% sum
 		chk_xAllMatch <- chk_yNotFound == 0
-		fnTmr <- timer(fnTmr, step = "counting problems")
+		fnTmr$add("counting problems")
 		valuesTable <- mget(ls(pattern = "^chk_")) %>%
 			unlist %>%
 			data.frame(value = .) %>%
@@ -122,7 +122,7 @@ left_join_checks <- function(
 							"\nsee report for details")
 
 		if (showNotFound & !chk_xAllMatch) print(joinXY %>% filter(!tmp_inY))
-		if(showProblems == TRUE) print(checksTable)
+		checksTable %>% printif(showProblems)
 
 		if (behavior == "warning") {
 			warning(commonMsg)
@@ -131,7 +131,8 @@ left_join_checks <- function(
 		} # warning or error
 	} # react to problems
 
-	fnTmr <- timer(fnTmr, end = TRUE)
+	fnTmr$add("end")
+	fnTmr$get() %>% printif(time)
 	if(time){
 		xSize <- nrow(x)
 		timePerM <- sum(fnTmr$dt_seconds/xSize*1E6) %>% round(2)
@@ -157,7 +158,7 @@ left_join_checks <- function(
 			)
 		lum_0_100(60)
 		print(timerPlot)
-	} # display timer if requested
+	} # TODO : à adapter au nouveau Rtimer
 
 	# return joined table, without temp columns
 	return(joinXY %>% select(-starts_with("tmp_")))

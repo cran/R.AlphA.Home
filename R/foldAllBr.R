@@ -15,9 +15,12 @@
 #' It automatically identifies parts to fold/unfold easily.
 #'
 #' Shortcuts required:
+#' Suggestion is to have one shortcut for this function, foldAllBr, and another
+#' one for "expand fold" command. Here are the suggested shortcuts depending
+#' on Windows or Mac :
 #' \itemize{
-#'   \item "fold all brackets": shift + alt + S (Windows) / ctrl + shift + up (Mac)
-#'   \item "expand fold": shift + alt + D (Windows) / ctrl + shift + down (Mac)
+#'   \item on Mac : use ctrl+shift -> + up (fold) and down (expand)
+#'   \item on Win : use shift+alt  -> + S  (fold) and D    (expand)
 #' }
 #'
 #' @param time Logical. If `TRUE`, the function will return \code{ggplot} object
@@ -41,9 +44,7 @@
 
 foldAllBr <- function(time = FALSE, debug_getTbl = FALSE){
 
-	fnTmr <- timer(step = "start")
-	fnTmr <- timer(fnTmr, step = "init, funs")
-	colFact <- 1E-3
+	fnTmr <- timer(step = "init, funs")
 	{
 		# foldBrLine : given a line, fold the bracket ending it ====================
 		foldBrLine <- function(opLine, waitTime = 0){
@@ -97,6 +98,7 @@ foldAllBr <- function(time = FALSE, debug_getTbl = FALSE){
 
 	} # local funs
 	{
+		colFact <- 1E-3
 		fnTmr <- timer(fnTmr, step = "read Content")
 		retainPos <- getPos()
 		curPosNum <- retainPos$start %>% DP_PN
@@ -155,13 +157,40 @@ foldAllBr <- function(time = FALSE, debug_getTbl = FALSE){
 			mutate(checkCat = ifelse(content == "", 0, nbTabs - catLvl)) %>%
 			identity
 	} # retreat doc content --> docContentRet
-	if(debug_getTbl) {
-		linesBefore <- 3 ; linesAfter <- 10
+	minCat <- min(docContentRet$checkCat)
+	if(debug_getTbl|minCat<0) {
+		# verifier pourquoi on n'a plus de return() ici : c'etait l'interet du truc
+		# 1_select columns
 		interm_tbl_debug <- docContentRet %>%
 			select(rowid, content, anyBr, brTag,
 				   conCatLim, isCur, isSecStart, opBrPN,
 				   catLvl, nbTabs, checkCat)
-	} # debug only : check for problems
+		# 2_identify the first problem
+		firstPb <- interm_tbl_debug %>%
+			filter(checkCat < 0) %>% slice_min(rowid)
+		anyPb <- nrow(firstPb) > 0
+		if(!anyPb) {
+			message("no format problem found - bug")
+			break
+		} #
+		prevLines <- 3 ; nextLines <- 4
+		if(anyPb) {
+			rowsRange <- (firstPb$rowid - prevLines):(firstPb$rowid + nextLines)
+		} else {
+			rowsRange <- 0
+		} # check
+
+		highlight_pb <- interm_tbl_debug %>%
+			dplyr::slice(rowsRange) %>%
+			relocate(rowid, checkCat, content) %>%
+			select(-opBrPN)
+		if (debug_getTbl) return(interm_tbl_debug) # only for debugging
+		if (anyPb) {
+			message("problems found : ")
+			print(highlight_pb) # a modifier : retirer print forcé pour CRAN
+		} #
+
+	} # check for problems
 
 	{
 		fnTmr <- timer(fnTmr, step = "docCont norm")
@@ -217,23 +246,25 @@ foldAllBr <- function(time = FALSE, debug_getTbl = FALSE){
 		if(skipIf) sectionStart_PN <- (1 + colFact) %>% round(8)
 
 	} # sectionStart : get corresponding line and PN
+	{
+		waitOption <- getOption("FAB_wait") # to visualize function being executed
+		if(is.null(waitOption)) waitOption = 0
 
-	waitOption <- getOption("FAB_wait") # to visualize function being executed
-	if(is.null(waitOption)) waitOption = 0
-
-	fnTmr <- timer(fnTmr, step = "fold")
-	subSectionsStarts %>%
-		pull(rowid) %>%
-		lapply(foldBrLine, waitTime = waitOption) # fold lines
-
-	fnTmr <- timer(fnTmr, step = "put cursor back - end")
-	sectionStart_DP <- sectionStart_PN %>% PN_DP
-	backToInit <- (onlyOneSec & curPosSec == "0_1")|curPosSec == 0
-	if(backToInit) {
-		setCursorPosition(curPosNum %>% PN_DP)
-	} else {
-		setCursorPosition(sectionStart_DP)
-	} #
+		fnTmr <- timer(fnTmr, step = "fold")
+		subSectionsStarts %>%
+			pull(rowid) %>%
+			lapply(foldBrLine, waitTime = waitOption) # fold lines
+	} # perform fold properly said
+	{
+		fnTmr <- timer(fnTmr, step = "put cursor back - end")
+		sectionStart_DP <- sectionStart_PN %>% PN_DP
+		backToInit <- (onlyOneSec & curPosSec == "0_1")|curPosSec == 0
+		if(backToInit) {
+			setCursorPosition(curPosNum %>% PN_DP())
+		} else {
+			setCursorPosition(sectionStart_DP)
+		} # x
+	} # handle the cursor position after folding
 
 	fnTmr <- fnTmr %>% timer(end = TRUE)
 	if(time){
@@ -258,6 +289,6 @@ foldAllBr <- function(time = FALSE, debug_getTbl = FALSE){
 	return(list(
 		debug_info = if (debug_getTbl) interm_tbl_debug else NULL
 		, timer_plot = if (time) timerPlot else NULL
-		))
+	))
 } #
 

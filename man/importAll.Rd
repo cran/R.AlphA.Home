@@ -2,7 +2,7 @@
 % Please edit documentation in R/importAll.R
 \name{importAll}
 \alias{importAll}
-\title{Function to Import and Concatenate Multiple data files}
+\title{Function to Import and Concatenate Multiple Data Files}
 \usage{
 importAll(
   path = ".",
@@ -10,47 +10,60 @@ importAll(
   ignore.case = FALSE,
   importFunction = NULL,
   fill = FALSE,
-  fileList = NULL
+  fileList = NULL,
+  renameTable = data.frame(oldName = character(), newName = character()),
+  excludePattern = NULL
 )
 }
 \arguments{
-\item{path}{Path to the directory, passed to `list.files`.}
+\item{path}{Character. Path to the directory, passed to `list.files`. Default is current directory (".").}
 
-\item{pattern}{Pattern to match file names, passed to `list.files`.}
+\item{pattern}{Character. Pattern to match file names, passed to `list.files`. Default is empty string (all files).}
 
 \item{ignore.case}{Logical. If `TRUE`, ignores case when matching file names.
-Passed to `list.files`. Default behavior is case-sensitive (`FALSE`)}
+Passed to `list.files`. Default behavior is case-sensitive (`FALSE`).}
 
-\item{importFunction}{A custom function for importing files. If not set, the
+\item{importFunction}{Function. A custom function for importing files. If not set, the
 function selects an import method based on the file extension.}
 
-\item{fill}{Logical. Passed to `rbind` to allow filling missing columns.}
+\item{fill}{Logical. Passed to `rbind` to allow filling missing columns with NA values. Default is `FALSE`.}
 
-\item{fileList}{A character vector of file names to import
-(used instead of `pattern`).}
+\item{fileList}{Character vector. A vector of file names to import
+(used instead of `pattern`). Can contain absolute or relative paths.}
+
+\item{renameTable}{Data.frame. A data.frame with 2 columns (oldName/newName). importAll
+will rename the columns of each file following this table. Default is empty data.frame.}
+
+\item{excludePattern}{Character. Pattern to exclude files from import, applied after initial file selection.
+Default is `NULL` (no exclusion).}
 }
 \value{
-A data frame containing the concatenated table with the fName column
+A data.table containing the concatenated table with the fName column indicating the source file for each row.
+All imported data is converted to data.table format with automatic type harmonization when necessary.
 }
 \description{
 Imports multiple files into a list, concatenates them into a single
-table, and adds an `fName` variable.
+table, and adds an `fName` variable. The function automatically handles type
+harmonization when different file types are mixed and supports various formats
+including CSV, Excel, RDS, Parquet, Feather, and QS files.
 
 The files can be selected either by giving a file list (character vector), or
-by specifying a pattern.
+by specifying a pattern. The function also supports column renaming and file
+exclusion patterns. When type conflicts are detected across files, the function
+automatically harmonizes column types using a priority system (character > numeric > Date > integer).
 }
 \examples{
 # Directory containing test files
 test_path <- tempdir()
 
 # Create test files
-write.csv( data.frame(a = 1:3, b = 4:6)    , file.path(test_path, "file1.csv"))
-write.csv( data.frame(a = 7:9, b = 10:12)  , file.path(test_path, "file2.csv"))
-write.csv( data.frame(a = 3:5, b = 8:10)   , file.path(test_path, "file3.csv"))
-saveRDS(   data.frame(a = 1:5, b = 6:10)   , file.path(test_path, "file1.rds"))
-saveRDS(   data.frame(a = 11:15, b = 16:20), file.path(test_path, "file2.rds"))
+write.csv(data.frame(a = 1:3, b = 4:6), file.path(test_path, "file1.csv"))
+write.csv(data.frame(a = 7:9, b = 10:12), file.path(test_path, "file2.csv"))
+write.csv(data.frame(a = 3:5, b = 8:10), file.path(test_path, "file3.csv"))
+saveRDS(data.frame(a = 1:5, b = 6:10), file.path(test_path, "file1.rds"))
+saveRDS(data.frame(a = 11:15, b = 16:20), file.path(test_path, "file2.rds"))
 
-# Example 1 : Import all csv files
+# Example 1: Import all csv files
 result <- importAll(path = test_path, pattern = "\\\\.csv$")
 print(result)
 

@@ -38,8 +38,11 @@ The format is as follows:
 It automatically identifies parts to fold/unfold easily.
 
 Shortcuts required:
+Suggestion is to have one shortcut for this function, foldAllBr, and another
+one for "expand fold" command. Here are the suggested shortcuts depending
+on Windows or Mac :
 \itemize{
-  \item "fold all brackets": shift + alt + S (Windows) / ctrl + shift + up (Mac)
-  \item "expand fold": shift + alt + D (Windows) / ctrl + shift + down (Mac)
+  \item on Mac : use ctrl+shift -> + up (fold) and down (expand)
+  \item on Win : use shift+alt  -> + S  (fold) and D    (expand)
 }
 }

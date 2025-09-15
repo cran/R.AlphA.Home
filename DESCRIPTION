@@ -2,21 +2,28 @@ Package: R.AlphA.Home
 Type: Package
 Title: Feel at Home using R, Thanks to Shortcuts Functions Making it
         Simple
-Version: 1.0.0
+Version: 1.1.0
 Authors@R: c(
-	person("Raphaël", "Flambard",     role=c("aut","cre"), email="r.alpha.act@outlook.fr"),
-	person("Adrien" , "Cocuaud",      role="ctb"))
-Description: A collection of personal functions designed to simplify and streamline common R programming tasks. This package provides reusable tools and shortcuts for frequently used calculations and workflows.
+    person("Raphaël", "Flambard", role = c("aut", "cre"), email = "raphael@ralpha.fr"),
+    person("Adrien", "Cocuaud", role = "ctb", email = "adrien@ralpha.fr"))
+Description: A collection of personal functions designed to simplify and streamline 
+    common R programming tasks. This package provides reusable tools and shortcuts 
+    for frequently used calculations and workflows.
 License: GPL-3
 Encoding: UTF-8
 RoxygenNote: 7.3.2
-Imports: data.table, lubridate, rstudioapi, stringr, grDevices,
-        openxlsx, ggplot2, dplyr, tibble, tidyr, R.utils, shinyWidgets,
-        shiny, magrittr
+Depends: R (>= 4.0.0)
+Imports: arrow, data.table, dplyr, ggplot2, grDevices, lubridate,
+        magrittr, openxlsx, qs, R.utils, rstudioapi, shiny,
+        shinyWidgets, stringi, stringr, tibble, tidyr, diffr, R6
+Suggests: testthat (>= 3.0.0)
+Config/testthat/edition: 3
+URL: https://github.com/R-alpha-act/R.AlphA.Home
+BugReports: https://github.com/R-alpha-act/R.AlphA.Home/issues
 NeedsCompilation: no
-Packaged: 2025-02-09 20:08:34 UTC; Raphael
+Packaged: 2025-09-15 12:55:45 UTC; adrie
 Author: Raphaël Flambard [aut, cre],
   Adrien Cocuaud [ctb]
-Maintainer: Raphaël Flambard <r.alpha.act@outlook.fr>
+Maintainer: Raphaël Flambard <raphael@ralpha.fr>
 Repository: CRAN
-Date/Publication: 2025-02-11 09:20:02 UTC
+Date/Publication: 2025-09-15 22:10:02 UTC

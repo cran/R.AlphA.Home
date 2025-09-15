@@ -1,4 +1,10 @@
-Name: fold all brackets
-Description: it’s in the name
-Binding: foldAllBr
+Name: ralpha_fold
+Description: fold R.AlphA code
+Binding: ralpha_fold
+Interactive: false
+
+
+Name: ralpha_unfold
+Description: unfold R.AlphA code - jump to next bracket
+Binding: ralpha_unfold
 Interactive: false
